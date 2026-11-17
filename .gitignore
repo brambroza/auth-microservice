@@ -1,0 +1,4 @@
+/authd
+/bin/
+.env
+*.log

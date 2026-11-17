@@ -1,0 +1,31 @@
+# Local development stack. Put AUTH_MASTER_KEY in a .env file next to this one.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: auth
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  auth:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      AUTH_ISSUER: http://localhost:8080
+      AUTH_DATABASE_URL: postgres://auth:auth@db:5432/auth?sslmode=disable
+      AUTH_MASTER_KEY: ${AUTH_MASTER_KEY:?set AUTH_MASTER_KEY in .env (openssl rand -base64 32)}
+      AUTH_CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
